@@ -1,0 +1,5 @@
+{
+  "name": "Driver Incentive Calculator",
+  "description": "A tool to update driver incentive reports by connecting PDF summary reports with dynamic rate sheets (CSV). It parses the driver PDF, matches trips against the CSV rates based on Pickup and Drop locations, recalculates commissions, and generates an updated report.",
+  "requestFramePermissions": []
+}

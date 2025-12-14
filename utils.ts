@@ -255,7 +255,8 @@ export const parseDriverPDF = async (file: File, rateData: RateData): Promise<Dr
                      }
                  }
                  
-                 const newComm = effWt * newRate;
+                 // UPDATED: Divided by 10 as requested
+                 const newComm = (effWt * newRate) / 10;
 
                  currentDriver.transactions.push({
                      truck,
@@ -293,6 +294,40 @@ export const parseDriverPDF = async (file: File, rateData: RateData): Promise<Dr
   }
 
   return reports;
+};
+
+// --- Export CSV ---
+
+export const generateMismatchCSV = (reports: DriverReport[]) => {
+  const rows: any[] = [];
+  reports.forEach(r => {
+    r.transactions.forEach(t => {
+      if (t.matchType === 'NONE') {
+        rows.push({
+          'Driver': r.driverName,
+          'Date': t.date,
+          'Truck': t.truck,
+          'Pickup': t.pickup,
+          'Drop': t.drop,
+          'DO Number': t.doNumber,
+          'Weight': t.effWt,
+          'Old Rate': t.originalEffRt
+        });
+      }
+    });
+  });
+
+  if (rows.length === 0) return;
+
+  const csv = Papa.unparse(rows);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'mismatched_routes.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 };
 
 // --- PDF Generator ---

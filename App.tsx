@@ -4,7 +4,7 @@ import {
   RefreshCw, AlertTriangle, XCircle, Search, ChevronRight, 
   MapPin, Truck, Calendar, FileCheck, ArrowRight
 } from 'lucide-react';
-import { parseRatesCSV, parseDriverPDF, generateMismatchCSV, RateData, DriverReport, generatePDF } from './utils';
+import { parseRatesCSV, parseDriverPDF, generateMismatchCSV, generateAllTripsCSV, RateData, DriverReport, generatePDF } from './utils';
 
 const App: React.FC = () => {
   const [rateData, setRateData] = useState<RateData | null>(null);
@@ -111,6 +111,15 @@ const App: React.FC = () => {
                   >
                     Start Over
                   </button>
+                  
+                  <button 
+                    onClick={() => generateAllTripsCSV(reports)}
+                    className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 py-2 rounded-lg transition-all shadow-sm hover:shadow text-sm font-medium"
+                  >
+                    <FileText className="w-4 h-4" />
+                    Export CSV
+                  </button>
+
                   <button 
                     onClick={handleExport}
                     className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-lg transition-all shadow-md hover:shadow-lg text-sm font-medium"

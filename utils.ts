@@ -296,7 +296,7 @@ export const parseDriverPDF = async (file: File, rateData: RateData): Promise<Dr
   return reports;
 };
 
-// --- Export CSV ---
+// --- Export CSVs ---
 
 export const generateMismatchCSV = (reports: DriverReport[]) => {
   const rows: any[] = [];
@@ -325,6 +325,43 @@ export const generateMismatchCSV = (reports: DriverReport[]) => {
   const link = document.createElement('a');
   link.href = url;
   link.setAttribute('download', 'mismatched_routes.csv');
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+export const generateAllTripsCSV = (reports: DriverReport[]) => {
+  const rows: any[] = [];
+  reports.forEach(r => {
+    r.transactions.forEach(t => {
+      rows.push({
+        'Driver': r.driverName,
+        'Date': t.date,
+        'Truck': t.truck,
+        'Pickup': t.pickup,
+        'Drop': t.drop,
+        'DO Number': t.doNumber,
+        'Weight': t.effWt,
+        'Old Rate': t.originalEffRt,
+        'New Rate': t.newEffRt,
+        'Old Comm': t.originalComm,
+        'New Comm': t.newComm,
+        'Diff': t.diff,
+        'Match Type': t.matchType,
+        'Matched Pickup': t.matchedPickup || '',
+        'Matched Drop': t.matchedDrop || ''
+      });
+    });
+  });
+
+  if (rows.length === 0) return;
+
+  const csv = Papa.unparse(rows);
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.setAttribute('download', 'all_trips_data.csv');
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);

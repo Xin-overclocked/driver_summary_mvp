@@ -12,6 +12,7 @@ const App: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeDriverIndex, setActiveDriverIndex] = useState(0);
+  const [driverSearchTerm, setDriverSearchTerm] = useState('');
 
   // Derived state for stats
   const { totalMismatches, totalFuzzy, missingRoutes, totalTrips } = useMemo(() => {
@@ -66,6 +67,7 @@ const App: React.FC = () => {
         const processedReports = await parseDriverPDF(e.target.files[0], rateData);
         setReports(processedReports);
         setActiveDriverIndex(0);
+        setDriverSearchTerm(''); // Reset search on new upload
       } catch (err) {
         console.error(err);
         setError("Failed to parse PDF file. Ensure it is a text-based PDF.");
@@ -85,6 +87,7 @@ const App: React.FC = () => {
     setRateData(null);
     setReports([]);
     setError(null);
+    setDriverSearchTerm('');
   };
 
   return (
@@ -302,37 +305,59 @@ const App: React.FC = () => {
               
               {/* Sidebar: Driver List */}
               <div className="lg:w-80 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-                <div className="p-4 bg-slate-50 border-b border-slate-200">
+                <div className="p-4 bg-slate-50 border-b border-slate-200 space-y-3">
                   <h2 className="font-semibold text-slate-700">Drivers ({reports.length})</h2>
+                  
+                  {/* Search Input */}
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <input
+                      type="text"
+                      placeholder="Search drivers..."
+                      value={driverSearchTerm}
+                      onChange={(e) => setDriverSearchTerm(e.target.value)}
+                      className="w-full pl-9 pr-3 py-2 text-sm border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow"
+                    />
+                  </div>
                 </div>
                 <div className="overflow-y-auto flex-1">
-                  {reports.map((report, idx) => (
-                    <button
-                      key={idx}
-                      onClick={() => setActiveDriverIndex(idx)}
-                      className={`w-full text-left p-4 border-b border-slate-100 hover:bg-slate-50 transition-all group relative
-                        ${activeDriverIndex === idx ? 'bg-blue-50/60' : ''}`}
-                    >
-                      <div className="flex justify-between items-start mb-1">
-                        <span className={`font-medium ${activeDriverIndex === idx ? 'text-blue-700' : 'text-slate-700'}`}>
-                          {report.driverName}
-                        </span>
-                        <div className="flex gap-1">
-                          {report.mismatchedTrips > 0 && <span className="w-2 h-2 rounded-full bg-red-500 mt-1.5" />}
-                          {report.fuzzyTrips > 0 && <span className="w-2 h-2 rounded-full bg-amber-400 mt-1.5" />}
+                  {reports
+                    .map((report, idx) => ({ ...report, originalIndex: idx })) // Preserve original index
+                    .filter(item => item.driverName.toLowerCase().includes(driverSearchTerm.toLowerCase()))
+                    .map((item) => (
+                      <button
+                        key={item.originalIndex}
+                        onClick={() => setActiveDriverIndex(item.originalIndex)}
+                        className={`w-full text-left p-4 border-b border-slate-100 hover:bg-slate-50 transition-all group relative
+                          ${activeDriverIndex === item.originalIndex ? 'bg-blue-50/60' : ''}`}
+                      >
+                        <div className="flex justify-between items-start mb-1">
+                          <span className={`font-medium ${activeDriverIndex === item.originalIndex ? 'text-blue-700' : 'text-slate-700'}`}>
+                            {item.driverName}
+                          </span>
+                          <div className="flex gap-1">
+                            {item.mismatchedTrips > 0 && <span className="w-2 h-2 rounded-full bg-red-500 mt-1.5" />}
+                            {item.fuzzyTrips > 0 && <span className="w-2 h-2 rounded-full bg-amber-400 mt-1.5" />}
+                          </div>
                         </div>
+                        <div className="flex justify-between items-center text-xs text-slate-500">
+                          <span>{item.transactions.length} trips</span>
+                          {activeDriverIndex === item.originalIndex && <ChevronRight className="w-4 h-4 text-blue-500" />}
+                        </div>
+                        
+                        {/* Active Indicator Bar */}
+                        {activeDriverIndex === item.originalIndex && (
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600" />
+                        )}
+                      </button>
+                    ))}
+                    
+                    {/* Empty State for Search */}
+                    {reports.filter(r => r.driverName.toLowerCase().includes(driverSearchTerm.toLowerCase())).length === 0 && (
+                      <div className="p-8 text-center text-slate-400">
+                        <p className="text-sm">No drivers found.</p>
                       </div>
-                      <div className="flex justify-between items-center text-xs text-slate-500">
-                        <span>{report.transactions.length} trips</span>
-                        {activeDriverIndex === idx && <ChevronRight className="w-4 h-4 text-blue-500" />}
-                      </div>
-                      
-                      {/* Active Indicator Bar */}
-                      {activeDriverIndex === idx && (
-                        <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-600" />
-                      )}
-                    </button>
-                  ))}
+                    )}
                 </div>
               </div>
 

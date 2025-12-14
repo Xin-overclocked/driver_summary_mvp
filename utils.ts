@@ -255,8 +255,16 @@ export const parseDriverPDF = async (file: File, rateData: RateData): Promise<Dr
                      }
                  }
                  
-                 // UPDATED: Divided by 10 as requested
-                 const newComm = (effWt * newRate) / 10;
+                 let newComm = 0;
+                 
+                 // LOGIC UPDATE: 
+                 // If we didn't find the route in the CSV (NONE), trust the PDF's original commission.
+                 // Otherwise, calculate using the formula.
+                 if (matchType === 'NONE') {
+                    newComm = originalComm;
+                 } else {
+                    newComm = (effWt * newRate) / 10;
+                 }
 
                  currentDriver.transactions.push({
                      truck,
